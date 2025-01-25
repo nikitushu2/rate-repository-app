@@ -2,6 +2,8 @@ import Text from './Text';
 import { useFormik } from 'formik';
 import { TextInput, Pressable, View, StyleSheet } from 'react-native';
 import * as yup from 'yup';
+import useSignIn from '../hooks/useSignIn';
+import { useNavigate } from 'react-router-native';
 
 const styles = StyleSheet.create({
     container: {
@@ -81,11 +83,20 @@ const Form = ({onSubmit}) => {
 };
 
 const SignIn = () => {
-    const onSubmit = values => {
+  const [signIn] = useSignIn();
+  const navigate = useNavigate();
+
+    const onSubmit = async (values) => {
       const username = values.username;
       const password = values.password;
   
-      console.log('username: ', username, ' password: ', password)
+      try {
+      const accessToken = await signIn({ username, password });
+      console.log('accessToken: ', accessToken);
+      navigate('/');
+    } catch (e) {
+      console.log(e);
+    }
     }
   
     return <Form onSubmit={onSubmit} />;

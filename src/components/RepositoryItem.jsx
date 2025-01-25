@@ -32,31 +32,31 @@ export default function RepositoryItem({item}) {
             <Image
             style={styles.tinyLogo}
             source={{
-            uri: `${item.ownerAvatarUrl}`,
+            uri: `${item.node.ownerAvatarUrl}`,
             }}
             />
             <View>
-                <Text style={{fontWeight: 'bold', marginTop: 10}}>{item.fullName}</Text>
-                <Text>{item.description}</Text>
-                <Text style={{backgroundColor: 'lightblue', color: 'white', alignSelf: 'flex-start', padding: 5, borderRadius: 5, marginTop: 5, marginBottom: 5}}>{item.language}</Text>
+                <Text style={{fontWeight: 'bold', marginTop: 10}}>{item.node.fullName}</Text>
+                <Text>{item.node.description}</Text>
+                <Text style={{backgroundColor: 'lightblue', color: 'white', alignSelf: 'flex-start', padding: 5, borderRadius: 5, marginTop: 5, marginBottom: 5}}>{item.node.language}</Text>
             </View>
         </View>
         <View style={{display: 'flex', flexDirection: 'row', gap: 30, marginLeft: 80, marginVertical: 15}}>
             <View style={styles.stats}>
                 <Text>Stars</Text>
-                <Text>{(item.stargazersCount / 1_000).toFixed(1)}k</Text>
+                <Text>{(item.node.stargazersCount / 1_000).toFixed(1)}k</Text>
             </View>
             <View style={styles.stats}>
                 <Text>Forks</Text>
-                <Text>{(item.forksCount / 1_000).toFixed(1)}k</Text>
+                <Text>{(item.node.forksCount / 1_000).toFixed(1)}k</Text>
             </View>
             <View style={styles.stats}>
                 <Text>Reviews</Text>
-                <Text>{item.reviewCount > 1000 ? <Text>{(item.forksCount / 1_000).toFixed(1)}k</Text> : item.reviewCount}</Text>
+                <Text>{item.node.reviewCount > 1000 ? <Text>{(item.node.forksCount / 1_000).toFixed(1)}k</Text> : item.node.reviewCount}</Text>
             </View>
             <View style={styles.stats}>
                 <Text>Rating</Text>
-                <Text>{item.ratingAverage > 1000 ? <Text>{(item.ratingAverage / 1_000).toFixed(1)}k</Text> : item.ratingAverage}</Text>
+                <Text>{item.node.ratingAverage > 1000 ? <Text>{(item.node.ratingAverage / 1_000).toFixed(1)}k</Text> : item.node.ratingAverage}</Text>
             </View>
         </View>
         {/*
