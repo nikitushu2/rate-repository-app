@@ -1,7 +1,12 @@
 import { FlatList, View, StyleSheet } from 'react-native';
 import Text from './Text';
 import RepositoryItem from './RepositoryItem';
-import { useQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client';
+import {Picker} from '@react-native-picker/picker';
+import React, { useState, useRef, useEffect } from 'react';
+import { createContext, useContext } from 'react';
+import { Searchbar } from 'react-native-paper';
+import { useDebounce } from 'use-debounce';
 
 import { GET_REPOSITORIES } from '../graphql/queries';
 
@@ -15,71 +20,99 @@ const styles = StyleSheet.create({
   }
 });
 
-const repositories = [
-  {
-    id: 'jaredpalmer.formik',
-    fullName: 'jaredpalmer/formik',
-    description: 'Build forms in React, without the tears',
-    language: 'TypeScript',
-    forksCount: 1589,
-    stargazersCount: 21553,
-    ratingAverage: 88,
-    reviewCount: 4,
-    ownerAvatarUrl: 'https://avatars2.githubusercontent.com/u/4060187?v=4',
-  },
-  {
-    id: 'rails.rails',
-    fullName: 'rails/rails',
-    description: 'Ruby on Rails',
-    language: 'Ruby',
-    forksCount: 18349,
-    stargazersCount: 45377,
-    ratingAverage: 100,
-    reviewCount: 2,
-    ownerAvatarUrl: 'https://avatars1.githubusercontent.com/u/4223?v=4',
-  },
-  {
-    id: 'django.django',
-    fullName: 'django/django',
-    description: 'The Web framework for perfectionists with deadlines.',
-    language: 'Python',
-    forksCount: 21015,
-    stargazersCount: 48496,
-    ratingAverage: 73,
-    reviewCount: 5,
-    ownerAvatarUrl: 'https://avatars2.githubusercontent.com/u/27804?v=4',
-  },
-  {
-    id: 'reduxjs.redux',
-    fullName: 'reduxjs/redux',
-    description: 'Predictable state container for JavaScript apps',
-    language: 'TypeScript',
-    forksCount: 13902,
-    stargazersCount: 52869,
-    ratingAverage: 0,
-    reviewCount: 0,
-    ownerAvatarUrl: 'https://avatars3.githubusercontent.com/u/13142323?v=4',
-  },
-];
+export const ThemeContext = createContext();
+
+export function ThemeProvider(props) {
+  const [order, setOrder] = useState('latest');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 500)
+
+  return (
+    <ThemeContext.Provider value={[order, setOrder, searchQuery, setSearchQuery, debouncedSearchQuery]}>
+      {props.children}
+    </ThemeContext.Provider>
+  )
+}
+
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
-const RepositoryList = () => {
-  const { data, error, loading } = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network'});
+
+export class RepositoryListContainer extends React.Component {
+  Order = () => {
+    const props = this.props;
+    const pickerRef = useRef();
+    const [order, setOrder, searchQuery, setSearchQuery] = useContext(ThemeContext);
+    
+  
+    function open() {
+      pickerRef.current.focus();
+    }
+  
+    function close() {
+      pickerRef.current.blur();
+    }
+  
   return (
-    <FlatList style={{backgroundColor: '#e1e4e8'}}
-      data={data?.repositories?.edges}
-      ItemSeparatorComponent={ItemSeparator}
-      // other props
-      renderItem={({item, index, separators}) => (
-        <View style={styles.flexContainer}>
-          <View>
-            <RepositoryItem item={item}/>
-          </View>
-        </View>
-      )}
+    <>
+  <Searchbar
+      placeholder="Search"
+      onChangeText={setSearchQuery}
+      value={searchQuery}
     />
-  );
+  <Picker
+    ref={pickerRef}
+    selectedValue={order}
+    onValueChange={(itemValue, _itemIndex) =>
+      setOrder(itemValue)
+    }>
+    <Picker.Item label="Latest repositories" value="latest"/>
+    <Picker.Item label="Highest rated repositories" value="highest" />
+    <Picker.Item label="Lowest rated repositories" value="lowest" />
+  </Picker>
+  </>
+  )
+  }
+
+  render() {
+    return (
+      <FlatList style={{backgroundColor: '#e1e4e8'}}
+        data={this.props.data?.repositories?.edges}
+        ItemSeparatorComponent={ItemSeparator}
+        // other props
+        renderItem={({item, index, separators}) => (
+          <View style={styles.flexContainer}>
+            <View>
+              <RepositoryItem item={item}/>
+            </View>
+          </View>
+        )}
+        ListHeaderComponent={this.Order}
+      />
+    );
+  }
+}
+
+const RepositoryList = () => {
+  const [order, _setOrder, searchQuery, _setSearchQuery, debouncedSearchQuery] = useContext(ThemeContext);
+  const { data: data1 } = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: {searchKeyword: debouncedSearchQuery}});
+  const { data: data2} = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: { orderBy: "RATING_AVERAGE", orderDirection: "DESC", searchKeyword: debouncedSearchQuery }});
+  const { data: data3} = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: { orderBy: "RATING_AVERAGE", orderDirection: "ASC", searchKeyword: debouncedSearchQuery }});
+
+  const [data, setData] = useState(data1);
+
+  useEffect(() => {
+    if (order === 'latest') {
+      setData(data1)
+    } else if (order === 'highest') {
+      setData(data2)
+    } else if (order === 'lowest') {
+      setData(data3)
+    }
+  }, [order, debouncedSearchQuery, data1, data2, data3])
+
+
+  return <RepositoryListContainer data={data} />;
 };
 
 export default RepositoryList;

@@ -43,13 +43,26 @@ const AppBar = () => {
   <Link to="/"><View><Text style={{color: 'white', margin: 5, fontWeight: 'bold'}}>Repositories</Text></View></Link>
   </Pressable>
   {data?.me?.username ? (
+    <>
+    <Pressable>
+    <Link to="/myreviews"><View><Text style={{color: 'white', margin: 5, fontWeight: 'bold'}}>My reviews</Text></View></Link>
+    </Pressable>
+    <Pressable>
+    <Link to="/review"><View><Text style={{color: 'white', margin: 5, fontWeight: 'bold'}}>Create review</Text></View></Link>
+    </Pressable>
     <Pressable onPress={signOut}>
     <View><Text style={{color: 'white', margin: 5, fontWeight: 'bold'}}>Sign out</Text></View>
     </Pressable>
+    </>
   ) : (
+    <>
     <Pressable>
   <Link to="/signin"><View><Text style={{color: 'white', margin: 5, fontWeight: 'bold'}}>Sign in</Text></View></Link>
   </Pressable>
+  <Pressable>
+  <Link to="/signup"><View><Text style={{color: 'white', margin: 5, fontWeight: 'bold'}}>Sign up</Text></View></Link>
+  </Pressable>
+  </>
   )}
   </ScrollView>
   </View>
