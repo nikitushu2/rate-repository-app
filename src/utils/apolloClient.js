@@ -5,6 +5,8 @@ import { relayStylePagination } from '@apollo/client/utilities';
 
 const APOLLO_URI = Constants.expoConfig.extra.env;
 
+console.log('APOLLO_URI:', APOLLO_URI || 'NOT SET - Please check your .env file');
+
 const httpLink = createHttpLink({
     uri: APOLLO_URI,
 });

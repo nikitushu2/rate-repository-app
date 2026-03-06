@@ -95,9 +95,9 @@ export class RepositoryListContainer extends React.Component {
 
 const RepositoryList = () => {
   const [order, _setOrder, searchQuery, _setSearchQuery, debouncedSearchQuery] = useContext(ThemeContext);
-  const { data: data1 } = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: {searchKeyword: debouncedSearchQuery}});
-  const { data: data2} = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: { orderBy: "RATING_AVERAGE", orderDirection: "DESC", searchKeyword: debouncedSearchQuery }});
-  const { data: data3} = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: { orderBy: "RATING_AVERAGE", orderDirection: "ASC", searchKeyword: debouncedSearchQuery }});
+  const { data: data1, loading: loading1, error: error1 } = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: {searchKeyword: debouncedSearchQuery}});
+  const { data: data2, loading: loading2, error: error2} = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: { orderBy: "RATING_AVERAGE", orderDirection: "DESC", searchKeyword: debouncedSearchQuery }});
+  const { data: data3, loading: loading3, error: error3} = useQuery(GET_REPOSITORIES, {fetchPolicy: 'cache-and-network', variables: { orderBy: "RATING_AVERAGE", orderDirection: "ASC", searchKeyword: debouncedSearchQuery }});
 
   const [data, setData] = useState(data1);
 
@@ -111,6 +111,50 @@ const RepositoryList = () => {
     }
   }, [order, debouncedSearchQuery, data1, data2, data3])
 
+  // Log errors and data for debugging
+  useEffect(() => {
+    if (error1 || error2 || error3) {
+      const error = error1 || error2 || error3;
+      console.log('GraphQL Error:', error);
+      console.log('Error details:', {
+        message: error.message,
+        networkError: error.networkError,
+        graphQLErrors: error.graphQLErrors
+      });
+    }
+    if (data1) {
+      console.log('Repositories data1:', JSON.stringify(data1, null, 2));
+      console.log('Repositories count:', data1?.repositories?.edges?.length);
+      if (data1?.repositories?.edges?.length === 0) {
+        console.log('No repositories found - backend may be empty or query returned no results');
+      }
+    }
+  }, [error1, error2, error3, data1]);
+
+  if (loading1 && !data1) {
+    return <View style={{padding: 20}}><Text>Loading repositories...</Text></View>;
+  }
+
+  if (error1) {
+    const errorMessage = error1.networkError 
+      ? `Network error: ${error1.networkError.message}. Make sure the backend server is running at the configured URL.`
+      : `Error: ${error1.message}`;
+    return (
+      <View style={{padding: 20}}>
+        <Text style={{color: 'red', marginBottom: 10}}>{errorMessage}</Text>
+        <Text style={{fontSize: 12, color: 'gray'}}>Check your .env file and ensure the backend is running.</Text>
+      </View>
+    );
+  }
+
+  if (data1 && data1.repositories && data1.repositories.edges && data1.repositories.edges.length === 0) {
+    return (
+      <View style={{padding: 20}}>
+        <Text>No repositories found.</Text>
+        <Text style={{fontSize: 12, color: 'gray', marginTop: 10}}>The backend may not have any data yet.</Text>
+      </View>
+    );
+  }
 
   return <RepositoryListContainer data={data} />;
 };
